@@ -10,8 +10,10 @@ class Problem(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        self.title
+        return self.title
 
+    class Meta:
+       ordering = ('-created',)
 
 class CodeImage(models.Model):
     image = models.ImageField(upload_to='images')
@@ -41,3 +43,5 @@ class Comment(models.Model):
     def __str__(self):
         return self.comment
 
+    class Meta:
+        ordering = ('created',)

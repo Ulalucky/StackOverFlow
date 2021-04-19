@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from main.models import Problem, CodeImage, Reply
+from main.models import Problem, CodeImage, Reply, Comment
 
 
 class ImageSerializers(serializers.ModelSerializer):
@@ -25,11 +25,11 @@ class ImageSerializers(serializers.ModelSerializer):
 
 class ProblemSerializer(serializers.ModelSerializer):
     created = serializers.DateTimeField(format="%d %B %Y %H:%M", read_only=True )
-
+    author = serializers.ReadOnlyField(source='author.email')
     images = ImageSerializers(many=True, read_only=True)
     class Meta:
         model = Problem
-        fields = ('id', 'title', 'description', 'images', 'created')
+        fields = ('id', 'title', 'description', 'images', 'created', 'author')
 
     def create(self, validated_data):
         request = self.context.get('request')
@@ -71,6 +71,23 @@ class ReplySerializer(serializers.ModelSerializer):
         reply = Reply.objects.create(author=author, **validated_data)
         return reply
 
+    def to_representation(self, instance):
+        representation = super(ReplySerializer, self).to_representation(instance)
+        representation['comments'] = CommentSerializer(instance.comments.all(), many=True).data
+        return representation
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source='author.email')
+    class Meta:
+        model = Comment
+        fields = '__all__'
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        author = request.user
+        comment = Comment.objects.create(author=author, **validated_data)
+        return comment
 
 
 
